@@ -9,6 +9,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../services/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -37,11 +38,7 @@ function Login() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.response?.data ||
-          "Invalid email or password."
-      );
+      setError(getErrorMessage(err, "Invalid email or password."));
     } finally {
       setLoading(false);
     }

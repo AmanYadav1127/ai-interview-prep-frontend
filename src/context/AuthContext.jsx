@@ -3,10 +3,19 @@ import { login as loginService, logout as logoutService } from "../services/auth
 
 const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(
-    localStorage.getItem("token")
+const isTokenValid = (t) => {
+  return Boolean(
+    t &&
+    typeof t === "string" &&
+    t !== "null" &&
+    t !== "undefined" &&
+    t.trim().length > 10
   );
+};
+
+export function AuthProvider({ children }) {
+  const initialToken = localStorage.getItem("token");
+  const [token, setToken] = useState(isTokenValid(initialToken) ? initialToken : null);
 
   const login = async (email, password) => {
     const response = await loginService({
@@ -14,7 +23,10 @@ export function AuthProvider({ children }) {
       password,
     });
 
-    setToken(response.token);
+    if (response?.token) {
+      setToken(response.token);
+      localStorage.setItem("token", response.token);
+    }
 
     return response;
   };
@@ -24,11 +36,13 @@ export function AuthProvider({ children }) {
     setToken(null);
   };
 
+  const isAuthenticated = isTokenValid(token);
+
   return (
     <AuthContext.Provider
       value={{
         token,
-        isAuthenticated: !!token,
+        isAuthenticated,
         login,
         logout,
       }}

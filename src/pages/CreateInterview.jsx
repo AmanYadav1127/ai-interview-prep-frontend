@@ -13,9 +13,13 @@ import {
 
 import Navbar from "../components/Navbar";
 import { createInterview } from "../services/interviewService";
+import { getErrorMessage } from "../services/api";
+
+import { useAuth } from "../context/AuthContext";
 
 function CreateInterview() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const [form, setForm] = useState({
     title: "",
@@ -24,6 +28,7 @@ function CreateInterview() {
     type: "LIVE_ADAPTIVE",
     difficulty: "MEDIUM",
     questionLimit: 5,
+    durationMinutes: 10,
   });
 
   const [loading, setLoading] = useState(false);
@@ -40,6 +45,11 @@ function CreateInterview() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
 
     setError("");
 
@@ -58,17 +68,14 @@ function CreateInterview() {
         type: form.type,
         difficulty: form.difficulty,
         questionLimit: Number(form.questionLimit),
+        durationMinutes: Number(form.durationMinutes),
       });
 
       navigate(`/interview/${response.id}`);
     } catch (err) {
       console.error(err);
 
-      setError(
-        err.response?.data?.message ||
-          err.response?.data ||
-          "Unable to create interview."
-      );
+      setError(getErrorMessage(err, "Unable to create interview."));
     } finally {
       setLoading(false);
     }
@@ -286,6 +293,47 @@ function CreateInterview() {
                     onClick={() =>
                       setForm((prev) => ({
                         ...prev,
+                        type: "LIVE_ADAPTIVE",
+                      }))
+                    }
+                    className={`rounded-2xl border p-5 text-left transition ${
+                      form.type === "LIVE_ADAPTIVE"
+                        ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500/10"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles
+                          size={21}
+                          className="text-indigo-600"
+                        />
+                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-700">
+                          RECOMMENDED
+                        </span>
+                      </div>
+
+                      {form.type === "LIVE_ADAPTIVE" && (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white">
+                          <Check size={14} />
+                        </div>
+                      )}
+                    </div>
+
+                    <h3 className="mt-4 font-semibold text-slate-900">
+                      Live AI Interview (1-on-1)
+                    </h3>
+
+                    <p className="mt-1 text-sm leading-5 text-slate-600">
+                      Real person-vs-person feel. Starts with introduction, AI interviewer Alex dynamically follows up based on your exact answers, guided by a session countdown timer.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
                         type: "NORMAL",
                       }))
                     }
@@ -298,7 +346,7 @@ function CreateInterview() {
                     <div className="flex items-start justify-between">
                       <Target
                         size={21}
-                        className="text-indigo-600"
+                        className="text-slate-600"
                       />
 
                       {form.type === "NORMAL" && (
@@ -312,44 +360,8 @@ function CreateInterview() {
                       Normal Interview
                     </h3>
 
-                    <p className="mt-1 text-sm leading-5 text-slate-500">
-                      Follow a structured interview flow.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        type: "LIVE_ADAPTIVE",
-                      }))
-                    }
-                    className={`rounded-2xl border p-5 text-left transition ${
-                      form.type === "LIVE_ADAPTIVE"
-                        ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500/10"
-                        : "border-slate-200 bg-white hover:border-slate-300"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <Sparkles
-                        size={21}
-                        className="text-violet-600"
-                      />
-
-                      {form.type === "LIVE_ADAPTIVE" && (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white">
-                          <Check size={14} />
-                        </div>
-                      )}
-                    </div>
-
-                    <h3 className="mt-4 font-semibold text-slate-900">
-                      Live Adaptive AI
-                    </h3>
-
-                    <p className="mt-1 text-sm leading-5 text-slate-500">
-                      AI adapts every question to your answers.
+                    <p className="mt-1 text-sm leading-5 text-slate-600">
+                      Direct, structured question-and-answer format. Tests standard technical questions without conversational intro or banter.
                     </p>
                   </button>
 
@@ -358,8 +370,8 @@ function CreateInterview() {
 
               <div className="my-8 border-t border-slate-100" />
 
-              {/* Difficulty + Questions */}
-              <div className="grid gap-5 sm:grid-cols-2">
+              {/* Difficulty + Questions + Session Timer */}
+              <div className="grid gap-5 sm:grid-cols-3">
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -380,7 +392,7 @@ function CreateInterview() {
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Number of questions
+                    Questions
                   </label>
 
                   <select
@@ -393,6 +405,24 @@ function CreateInterview() {
                     <option value="5">5 Questions</option>
                     <option value="7">7 Questions</option>
                     <option value="10">10 Questions</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Session Timer
+                  </label>
+
+                  <select
+                    name="durationMinutes"
+                    value={form.durationMinutes}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+                  >
+                    <option value="5">5 Minutes (Quick)</option>
+                    <option value="10">10 Minutes (Standard)</option>
+                    <option value="15">15 Minutes (Full)</option>
+                    <option value="20">20 Minutes (In-Depth)</option>
                   </select>
                 </div>
 

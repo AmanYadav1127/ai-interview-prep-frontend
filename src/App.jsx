@@ -1,44 +1,62 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import CreateInterview from "./pages/CreateInterview";
 import Dashboard from "./pages/Dashboard";
+import CreateInterview from "./pages/CreateInterview";
 import InterviewRoom from "./pages/InterviewRoom";
+import InterviewResultPage from "./pages/InterviewResult";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
-
-            <Route
-      path="/create-interview"
-      element={<CreateInterview />}
-    />
+        {/* Protected routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
-  path="/interview/:id"
-  element={<InterviewRoom />}
-/>
+          path="/create-interview"
+          element={
+            <ProtectedRoute>
+              <CreateInterview />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/interview/:id"
+          element={
+            <ProtectedRoute>
+              <InterviewRoom />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/interview/:id/result"
-          element={<h1>Interview Result</h1>}
+          element={
+            <ProtectedRoute>
+              <InterviewResultPage />
+            </ProtectedRoute>
+          }
         />
 
-        <Route
-          path="/"
-          element={<Navigate to="/login" replace />}
-        />
-
-        <Route
-          path="*"
-          element={<Navigate to="/login" replace />}
-        />
+        {/* Fallback */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

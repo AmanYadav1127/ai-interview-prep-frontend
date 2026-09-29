@@ -11,6 +11,7 @@ import {
   User,
 } from "lucide-react";
 import { signup } from "../services/authService";
+import { getErrorMessage } from "../services/api";
 
 function Signup() {
   const navigate = useNavigate();
@@ -50,11 +51,7 @@ function Signup() {
 
       navigate("/login");
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.response?.data ||
-          "Unable to create account."
-      );
+      setError(getErrorMessage(err, "Unable to create account."));
     } finally {
       setLoading(false);
     }
