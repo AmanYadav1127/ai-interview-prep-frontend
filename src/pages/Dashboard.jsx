@@ -15,6 +15,7 @@ import InterviewCard from "../components/InterviewCard";
 
 import { getDashboard } from "../services/dashboardService";
 import { getInterviews } from "../services/interviewService";
+import { getMe } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 
 function Dashboard() {
